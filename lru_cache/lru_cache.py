@@ -1,3 +1,9 @@
+
+import sys
+sys.path.append('./doubly_linked_list')
+from doubly_linked_list import DoublyLinkedList
+from doubly_linked_list import ListNode
+
 class LRUCache:
     """
     Our LRUCache class keeps track of the max number of nodes it
@@ -7,7 +13,10 @@ class LRUCache:
     to every node stored in the cache.
     """
     def __init__(self, limit=10):
-        pass
+        self.size = 0
+        self.limit = limit
+        self.storage = DoublyLinkedList()
+        self.storage.dict = dict()
 
     """
     Retrieves the value associated with the given key. Also
@@ -17,7 +26,14 @@ class LRUCache:
     key-value pair doesn't exist in the cache.
     """
     def get(self, key):
-        pass
+        if self.storage.dict.get(key) is None:
+            return None
+        
+        node = ListNode(self.storage.dict[key])
+        self.storage.move_to_front(node)
+        self.storage.dict.pop(key)
+        self.storage.dict[key] = node.value
+        return self.storage.dict[key]
 
     """
     Adds the given key-value pair to the cache. The newly-
@@ -30,4 +46,18 @@ class LRUCache:
     the newly-specified value.
     """
     def set(self, key, value):
-        pass
+        if self.storage.dict.get(key) != None:
+            node = ListNode(value)
+            self.storage.move_to_front(node)
+            self.storage.dict.pop(key)
+            self.storage.dict[key] = value
+            return value
+        elif self.size == self.limit:
+            self.storage.dict = {key:val for key, val in self.storage.dict.items() if val != self.storage.tail.value} 
+            self.storage.remove_from_tail()
+            self.size -= 1
+
+        self.size += 1
+        self.storage.add_to_head(value)
+        self.storage.dict[key] = value
+        return value
