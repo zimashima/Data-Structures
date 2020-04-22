@@ -16,7 +16,7 @@ class LRUCache:
         self.size = 0
         self.limit = limit
         self.storage = DoublyLinkedList()
-        self.storage.dict = dict()
+        self.storage_dict = dict()
 
     """
     Retrieves the value associated with the given key. Also
@@ -26,14 +26,12 @@ class LRUCache:
     key-value pair doesn't exist in the cache.
     """
     def get(self, key):
-        if self.storage.dict.get(key) is None:
+        if key not in self.storage_dict:
             return None
         
-        node = ListNode(self.storage.dict[key])
-        self.storage.move_to_front(node)
-        self.storage.dict.pop(key)
-        self.storage.dict[key] = node.value
-        return self.storage.dict[key]
+        node = self.storage_dict[key]
+        self.storage.move_to_end(node)
+        return node.value[1]
 
     """
     Adds the given key-value pair to the cache. The newly-
@@ -46,18 +44,20 @@ class LRUCache:
     the newly-specified value.
     """
     def set(self, key, value):
-        if self.storage.dict.get(key) != None:
-            node = ListNode(value)
-            self.storage.move_to_front(node)
-            self.storage.dict.pop(key)
-            self.storage.dict[key] = value
-            return value
-        elif self.size == self.limit:
-            self.storage.dict = {key:val for key, val in self.storage.dict.items() if val != self.storage.tail.value} 
-            self.storage.remove_from_tail()
+
+        if key in self.storage_dict:
+            node = self.storage_dict[key]
+            node.value = (key, value)
+            self.storage.move_to_end(node)
+            return 
+
+        if self.size == self.limit:
+            index = self.storage.head.value[0]
+            del self.storage_dict[index]
+            self.storage.remove_from_head()
             self.size -= 1
 
+        
+        self.storage.add_to_tail((key, value))
         self.size += 1
-        self.storage.add_to_head(value)
-        self.storage.dict[key] = value
-        return value
+        self.storage_dict[key] = self.storage.tail
